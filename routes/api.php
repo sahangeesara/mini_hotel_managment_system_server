@@ -20,3 +20,4 @@ Route::apiResources([
     'hotels' => HotelController::class,
 ]);
 
+Route::get('hotel', [HotelController::class, 'filter']);

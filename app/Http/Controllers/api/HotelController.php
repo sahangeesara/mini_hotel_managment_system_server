@@ -32,7 +32,7 @@ class HotelController extends Controller
      */
     public function store(Request $request)
     {
-//        info($request->all());
+
         $validatedData = $request->validate([
             'hotel_name' => 'required|max:255',
             'location' => 'required |max:255',
@@ -45,7 +45,6 @@ class HotelController extends Controller
             'image' => ''
         ]);
 
-        info($validatedData);
         try {
             $imagePath = null;
 
@@ -53,8 +52,16 @@ class HotelController extends Controller
             $hNo = 'HN' . str_pad((string) $nextId, 5, '0', STR_PAD_LEFT);
 
             if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')
-                    ->store('public/hotel/images');
+                $image = $request->file('image');
+
+                $originalName = $image->getClientOriginalName();
+
+                $fileName = time() . '_' . $originalName;
+
+                $imagePath = $image->storeAs(
+                    'public/hotel/images',
+                    $fileName
+                );
             }
 
             $hotel = Hotels::create([
@@ -69,11 +76,18 @@ class HotelController extends Controller
                 'description' => $validatedData['description'] ?? null,
                 'image' => $imagePath,
             ]);
-            return response()->json(['message' => 'hotel created successfully', 'hotel' => $hotel], 201);
+
+            return response()->json([
+                'message' => 'hotel created successfully',
+                'hotel' => $hotel
+            ], 201);
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return response()->json(['message' => 'An error occurred while adding hotel.'], 500);
+
+            return response()->json([
+                'message' => 'An error occurred while adding hotel.'
+            ], 500);
         }
     }
 
@@ -92,6 +106,67 @@ class HotelController extends Controller
         }
     }
 
+    public function filter(Request $request)
+    {
+        $query = Hotels::query();
+
+
+        if ($request->filled('hotel_name')) {
+            $query->where(
+                'hotel_name',
+                'LIKE',
+                '%' . $request->hotel_name . '%'
+            );
+        }
+
+
+        if ($request->filled('location')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('location', 'LIKE', '%' . $request->location . '%')
+                    ->orWhere('city', 'LIKE', '%' . $request->location . '%')
+                    ->orWhere('country', 'LIKE', '%' . $request->location . '%');
+            });
+        }
+
+        if ($request->filled('amenity')) {
+            $query->whereJsonContains(
+                'amenities',
+                $request->amenity
+            );
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where(
+                'price_per_night',
+                '>=',
+                $request->min_price
+            );
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where(
+                'price_per_night',
+                '<=',
+                $request->max_price
+            );
+        }
+
+        if ($request->filled('rating')) {
+            $query->where(
+                'star_rating',
+                '>=',
+                $request->rating
+            );
+        }
+
+        $hotels = $query->latest()->get();
+
+        return response()->json([
+            'success' => true,
+            'count' => $hotels->count(),
+            'data' => $hotels
+        ]);
+    }
     /**
      * Update the specified resource in storage.
      */
@@ -103,7 +178,7 @@ class HotelController extends Controller
             'city' => 'required | max:255',
             'country' => 'required |max:255',
             'price_per_night' => 'required| numeric|min:0',
-            'star_rating' => 'required|integer|min:1max:5',
+            'star_rating' => 'required|integer|min:1|max:5',
             'amenities' => 'required |array',
             'description' => 'nullable |string',
             'image' => 'image'
