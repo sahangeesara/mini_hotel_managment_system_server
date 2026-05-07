@@ -18,5 +18,5 @@ use Illuminate\Support\Facades\Route;
 
 Route::apiResources([
     'hotels' => HotelController::class,
-
 ]);
+
