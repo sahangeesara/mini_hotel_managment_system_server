@@ -22,7 +22,6 @@ A comprehensive REST API backend for managing hotels, bookings, and reservations
 - **Image Management**: Upload and manage hotel images with URL generation
 - **Amenities Management**: Store and retrieve hotel amenities
 - **Availability Tracking**: Track hotel availability status
-- **User Authentication**: Built-in authentication with Laravel Sanctum
 - **RESTful API**: Complete REST API for easy integration with frontend applications
 - **Database Migrations**: Automated database schema management
 - **Error Handling**: Comprehensive error handling and validation
@@ -227,14 +226,6 @@ GET /api/hotel?city=New York&country=USA&min_price=100&max_price=500
 - `created_at` - Timestamp
 - `updated_at` - Timestamp
 
-### Users Table
-- `id` - Primary Key
-- `name` - User name
-- `email` - User email (unique)
-- `password` - Hashed password
-- `email_verified_at` - Email verification timestamp
-- `created_at` - Timestamp
-- `updated_at` - Timestamp
 
 ## 📁 Project Structure
 
